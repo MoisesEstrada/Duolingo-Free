@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms'; // <--- NUEVO: Importante para el input
+import { FormsModule } from '@angular/forms';
 import { TeacherService, Ronda, ReporteProgreso } from '../../../services/teacher';
 import { AuthService } from '../../../services/auth';
 import Swal from 'sweetalert2';
@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-teacher-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule], // <--- NUEVO: Agregamos FormsModule
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
@@ -18,11 +18,12 @@ export class DashboardComponent implements OnInit {
   rondas: Ronda[] = [];
   reportes: ReporteProgreso[] = [];
   vistaActual: 'dashboard' | 'reportes' = 'dashboard';
-
-  // --- NUEVO: Variable para el buscador ---
   filtroBusqueda: string = '';
-
   username = 'Docente';
+
+  // --- ¡AQUÍ FALTABA ESTA VARIABLE! ---
+  aulasDocente: string[] = [];
+
   cargando = true;
   error = false;
 
@@ -34,30 +35,33 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const user = this.authService.getUser();
+    // Usamos 'any' para que no reclame si la interfaz User no tiene 'aulas' definido aún
+    const user: any = this.authService.getUser();
+
     if (!user) {
       this.router.navigate(['/login']);
       return;
     }
+
     this.username = user.username;
+
+    // --- CARGAR AULAS DESDE EL LOCALSTORAGE ---
+    if (user.aulas) {
+        this.aulasDocente = user.aulas.split(',');
+    }
+
     this.cargarDatos();
   }
 
-  // --- NUEVO: Getter Mágico que filtra la lista ---
-  // Cada vez que escribas en el input, esta función se ejecuta sola
   get reportesFiltrados() {
-    // Si no hay texto, devolvemos todo
     if (!this.filtroBusqueda) {
       return this.reportes;
     }
-    // Si hay texto, filtramos por nombre de estudiante (ignorando mayúsculas/minúsculas)
     const texto = this.filtroBusqueda.toLowerCase();
     return this.reportes.filter(rep =>
       rep.estudiante.username.toLowerCase().includes(texto)
     );
   }
-
-  // ... (El resto de tus métodos: cargarDatos, verReportes, toggleStatus, etc. Siguen IGUAL) ...
 
   cargarDatos() {
     this.cargando = true;
@@ -104,14 +108,10 @@ export class DashboardComponent implements OnInit {
     this.teacherService.toggleRonda(ronda.id).subscribe({
       next: () => {
         this.cd.detectChanges();
-        Swal.fire({
-            icon: 'success',
-            title: `Ronda ${ronda.activo ? 'Activada' : 'Desactivada'}`,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 1500
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 1500
         });
+        Toast.fire({ icon: 'success', title: `Ronda ${ronda.activo ? 'Activada' : 'Desactivada'}` });
       },
       error: () => {
         ronda.activo = estadoOriginal;

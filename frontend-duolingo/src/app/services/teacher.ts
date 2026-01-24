@@ -2,28 +2,40 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-// DTO para crear/editar
+/* ========= DTOs ========= */
+
+export interface EjercicioDTO {
+  id?: number;
+  tipo: string;
+  enunciado: string;
+  contenido?: string;
+  respuestaCorrecta: string;
+  opciones?: string;
+}
+
 export interface CrearRondaDTO {
   titulo: string;
   descripcion: string;
   nivel: string;
-  ejercicios: any[];
+  grado: string;
+  seccion: string;
+  ejercicios: EjercicioDTO[];
 }
 
-// Interfaz completa de Ronda
 export interface Ronda {
   id: number;
   titulo: string;
   descripcion: string;
   nivel: string;
+  grado: string;
+  seccion: string;
   creadorId: number;
   creadorNombre: string;
   cantidadEjercicios: number;
   activo?: boolean;
-  ejercicios: any[];
+  ejercicios: EjercicioDTO[];
 }
 
-// NUEVA: Interfaz para los Reportes de Notas
 export interface ReporteProgreso {
   id: number;
   puntaje: number;
@@ -31,6 +43,8 @@ export interface ReporteProgreso {
   estudiante: {
     id: number;
     username: string;
+    grado?: string;
+    seccion?: string;
   };
   ronda: {
     id: number;
@@ -41,50 +55,54 @@ export interface ReporteProgreso {
 
 @Injectable({ providedIn: 'root' })
 export class TeacherService {
+
   private apiRounds = 'http://localhost:8080/api/rounds';
-  private apiAdmin = 'http://localhost:8080/api/admin';
+  private apiAdmin  = 'http://localhost:8080/api/admin';
 
   constructor(private http: HttpClient) {}
 
-  // 1. Obtener todas las rondas
+  /* ========= RONDAS ========= */
+
   getRondas(): Observable<Ronda[]> {
     return this.http.get<Ronda[]>(this.apiRounds);
   }
 
-  // 2. Obtener UNA ronda por ID
   getRondaById(id: number): Observable<Ronda> {
     return this.http.get<Ronda>(`${this.apiRounds}/${id}`);
   }
 
-  // 3. Crear nueva ronda
   crearRonda(ronda: CrearRondaDTO): Observable<Ronda> {
     return this.http.post<Ronda>(this.apiRounds, ronda);
   }
 
-  // 4. Actualizar ronda existente
   actualizarRonda(id: number, ronda: CrearRondaDTO): Observable<Ronda> {
     return this.http.put<Ronda>(`${this.apiRounds}/${id}`, ronda);
   }
 
-  // 5. Activar/Desactivar
-  toggleRonda(id: number): Observable<any> {
-    return this.http.patch(`${this.apiRounds}/${id}/toggle`, {});
+  toggleRonda(id: number): Observable<void> {
+    return this.http.patch<void>(`${this.apiRounds}/${id}/toggle`, {});
   }
 
-  // 6. Eliminar
-  eliminarRonda(id: number): Observable<any> {
-    return this.http.delete(`${this.apiRounds}/${id}`);
+  eliminarRonda(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiRounds}/${id}`);
   }
 
-  // 7. Subir multimedia
-  subirArchivo(file: File): Observable<any> {
+  /* ========= MULTIMEDIA ========= */
+
+  subirArchivo(file: File): Observable<{ fileName: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.apiAdmin}/upload-multimedia`, formData);
+    return this.http.post<{ fileName: string }>(
+      `${this.apiAdmin}/upload-multimedia`,
+      formData
+    );
   }
 
-  // 8. OBTENER REPORTES
+  /* ========= REPORTES ========= */
+
   obtenerReporteGlobal(): Observable<ReporteProgreso[]> {
-    return this.http.get<ReporteProgreso[]>(`${this.apiAdmin}/progreso-global`);
+    return this.http.get<ReporteProgreso[]>(
+      `${this.apiAdmin}/progreso-global`
+    );
   }
 }

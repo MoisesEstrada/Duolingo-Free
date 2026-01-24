@@ -9,13 +9,15 @@ public class JwtResponse {
     private Long id;
     private String username;
     private String email;
-    private String role; // ADMIN, DOCENTE, ESTUDIANTE
+    private String role;
+    private String aulas; // <--- NUEVO CAMPO
 
-    public JwtResponse(String accessToken, Long id, String username, String email, String role) {
+    public JwtResponse(String accessToken, Long id, String username, String email, String role, String aulas) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
         this.email = email;
         this.role = role;
+        this.aulas = aulas; // <--- ASIGNAR
     }
 }

@@ -23,11 +23,13 @@ public class Round {
     private String titulo;
 
     private String descripcion;
-    private String nivel;
+    private String nivel; // A1, A2...
     private boolean activo = true;
 
-    // IMPORTANTE: Si User está en el mismo package, no necesita import,
-    // pero si está en otro (ej: com.duolingo.demo.model.User), asegúrate que exista.
+    // --- NUEVO: ¿PARA QUIÉN ES ESTA RONDA? ---
+    private String grado;   // Ej: "1ro"
+    private String seccion; // Ej: "A"
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creador_id")
     @JsonIgnore
@@ -36,19 +38,75 @@ public class Round {
     @OneToMany(mappedBy = "ronda", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Exercise> ejercicios;
 
-    // Getters y Setters manuales (por si Lombok no está cargando bien en tu PC)
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getTitulo() { return titulo; }
-    public void setTitulo(String titulo) { this.titulo = titulo; }
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-    public String getNivel() { return nivel; }
-    public void setNivel(String nivel) { this.nivel = nivel; }
-    public User getCreador() { return creador; }
-    public void setCreador(User creador) { this.creador = creador; }
-    public List<Exercise> getEjercicios() { return ejercicios; }
-    public void setEjercicios(List<Exercise> ejercicios) { this.ejercicios = ejercicios; }
-    public boolean isActivo() { return activo; }
-    public void setActivo(boolean activo) { this.activo = activo; }
+    public String getGrado() {
+        return grado;
+    }
+
+    public void setGrado(String grado) {
+        this.grado = grado;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public String getNivel() {
+        return nivel;
+    }
+
+    public void setNivel(String nivel) {
+        this.nivel = nivel;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public String getTitulo() {
+        return titulo;
+    }
+
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public List<Exercise> getEjercicios() {
+        return ejercicios;
+    }
+
+    public void setEjercicios(List<Exercise> ejercicios) {
+        this.ejercicios = ejercicios;
+    }
+
+    public User getCreador() {
+        return creador;
+    }
+
+    public void setCreador(User creador) {
+        this.creador = creador;
+    }
+
+    public String getSeccion() {
+        return seccion;
+    }
+
+    public void setSeccion(String seccion) {
+        this.seccion = seccion;
+    }
 }

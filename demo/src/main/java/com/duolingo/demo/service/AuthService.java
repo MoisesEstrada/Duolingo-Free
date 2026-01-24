@@ -46,6 +46,6 @@ public class AuthService {
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
-                role);
-    }
+                role,
+                userDetails.getAulas());    }
 }

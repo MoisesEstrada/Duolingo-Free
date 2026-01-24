@@ -55,28 +55,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults()) // 1. Configuración CORS
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // --- A. RUTAS PÚBLICAS Y ESTÁTICAS ---
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/uploads/**").permitAll() // Acceso a archivos físicos
-                        .requestMatchers("/api/admin/files/**").permitAll() // Acceso a archivos vía controller
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/admin/files/**").permitAll()
 
-                        // --- B. EXCEPCIONES ESPECÍFICAS (Orden Importante: Antes de las generales) ---
-                        // Esta línea permite que el DOCENTE vea el reporte global que está en /api/admin
+                        // --- B. EXCEPCIONES ESPECÍFICAS (Orden Importante) ---
+                        // 1. Permitir reportes a Admin y Docente
                         .requestMatchers("/api/admin/progreso-global").hasAnyAuthority("ADMIN", "DOCENTE")
 
+                        // 2. ARREGLO: Permitir subida de archivos a Admin y Docente
+                        .requestMatchers("/api/admin/upload-multimedia").hasAnyAuthority("ADMIN", "DOCENTE")
+
                         // --- C. REGLAS GENERALES POR ROL ---
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN") // El resto de admin bloqueado
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/teacher/**").hasAuthority("DOCENTE")
                         .requestMatchers("/api/student/**").hasAuthority("ESTUDIANTE")
 
-                        // Las rondas suelen ser compartidas, pero requieren login
                         .requestMatchers("/api/rounds/**").authenticated()
 
-                        // --- D. CUALQUIER OTRA COSA ---
                         .anyRequest().authenticated()
                 );
 
@@ -89,7 +90,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Ajusta esto si tu frontend corre en otro puerto, pero 4200 es el default de Angular
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));

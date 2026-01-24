@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { TeacherService } from '../../../services/teacher';
+import { TeacherService, Ronda } from '../../../services/teacher';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -18,10 +18,20 @@ export class CreateRoundComponent implements OnInit {
     titulo: '',
     descripcion: '',
     nivel: 'A1',
+    grado: '',
+    seccion: '',
     ejercicios: []
   };
 
-  tipos = ['TRADUCCION', 'LISTENING', 'IMAGEN', 'SELECCION_MULTIPLE', 'PRONUNCIACION', 'VERDADERO_FALSO'];
+  tipos = [
+    'TRADUCCION',
+    'LISTENING',
+    'IMAGEN',
+    'SELECCION_MULTIPLE',
+    'PRONUNCIACION',
+    'VERDADERO_FALSO'
+  ];
+
   enviando = false;
   esEdicion = false;
   idRonda: number | null = null;
@@ -33,7 +43,6 @@ export class CreateRoundComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Detectar si venimos a editar (hay ID en la URL)
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -41,38 +50,31 @@ export class CreateRoundComponent implements OnInit {
         this.idRonda = +id;
         this.cargarDatosRonda(this.idRonda);
       } else {
-        // Modo Creación: agregamos un ejercicio vacío por defecto
         this.agregarEjercicio();
       }
     });
   }
 
   cargarDatosRonda(id: number) {
-    // Mostrar loading mientras carga
-    Swal.fire({
-      title: 'Cargando datos...',
-      didOpen: () => Swal.showLoading()
-    });
+    Swal.fire({ title: 'Cargando...', didOpen: () => Swal.showLoading() });
 
     this.teacherService.getRondaById(id).subscribe({
-      next: (data: any) => {
+      next: (data: Ronda) => {
         this.ronda = data;
 
-        // Asegurarnos de que opcionesArray exista para el frontend (convertir string a array)
-        if (this.ronda.ejercicios) {
-          this.ronda.ejercicios.forEach((ex: any) => {
-             if (ex.opciones && (!ex.opcionesArray || ex.opcionesArray.length === 0)) {
-               ex.opcionesArray = ex.opciones.split(',');
-             } else if (!ex.opcionesArray) {
-               ex.opcionesArray = [''];
-             }
-          });
-        }
+        this.ronda.grado ??= '';
+        this.ronda.seccion ??= '';
+
+        this.ronda.ejercicios.forEach((ex: any) => {
+          ex.opcionesArray = ex.opciones
+            ? ex.opciones.split(',')
+            : [''];
+        });
 
         Swal.close();
       },
       error: () => {
-        Swal.fire('Error', 'No se pudo cargar la ronda solicitada', 'error');
+        Swal.fire('Error', 'No se pudo cargar la ronda', 'error');
         this.router.navigate(['/teacher/dashboard']);
       }
     });
@@ -106,69 +108,62 @@ export class CreateRoundComponent implements OnInit {
 
   onFileSelected(event: any, index: number) {
     const file = event.target.files[0];
-    if (file) {
-      // Subida inmediata del archivo
-      this.teacherService.subirArchivo(file).subscribe({
-        next: (res: any) => {
-          this.ronda.ejercicios[index].contenido = res.fileName;
+    if (!file) return;
 
-          // Toast de éxito
-          const Toast = Swal.mixin({
-            toast: true, position: 'top-end', showConfirmButton: false, timer: 2000
-          });
-          Toast.fire({ icon: 'success', title: 'Archivo subido correctamente' });
-        },
-        error: () => Swal.fire('Error', 'No se pudo subir el archivo', 'error')
-      });
-    }
+    this.teacherService.subirArchivo(file).subscribe({
+      next: res => {
+        this.ronda.ejercicios[index].contenido = res.fileName;
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Archivo subido',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      },
+      error: () =>
+        Swal.fire('Error', 'No se pudo subir el archivo', 'error')
+    });
   }
 
   guardarRonda() {
-    // Validaciones básicas
-    if (!this.ronda.titulo || !this.ronda.titulo.trim()) {
+    if (!this.ronda.titulo.trim()) {
       Swal.fire('Atención', 'Ponle un título a la ronda', 'warning');
       return;
     }
-    if (!this.ronda.ejercicios || this.ronda.ejercicios.length === 0) {
+
+    if (!this.ronda.grado || !this.ronda.seccion) {
+      Swal.fire('Falta información', 'Selecciona grado y sección', 'warning');
+      return;
+    }
+
+    if (!this.ronda.ejercicios.length) {
       Swal.fire('Atención', 'Agrega al menos un ejercicio', 'warning');
       return;
     }
 
     this.enviando = true;
 
-    // Procesar opcionesArray a string para el backend
     this.ronda.ejercicios.forEach((ex: any) => {
-      if (Array.isArray(ex.opcionesArray)) {
-        ex.opciones = ex.opcionesArray.filter((o: string) => o && o.trim() !== '').join(',');
-      }
+      ex.opciones = Array.isArray(ex.opcionesArray)
+        ? ex.opcionesArray.filter((o: string) => o.trim()).join(',')
+        : '';
     });
 
-    if (this.esEdicion && this.idRonda) {
-      // --- MODO EDICIÓN (PUT) ---
-      this.teacherService.actualizarRonda(this.idRonda, this.ronda).subscribe({
-        next: () => {
-          Swal.fire('¡Actualizado!', `La ronda "${this.ronda.titulo}" ha sido modificada`, 'success');
-          this.router.navigate(['/teacher/dashboard']);
-        },
-        error: (err) => {
-          this.enviando = false;
-          console.error(err);
-          Swal.fire('Error', 'No se pudo actualizar la ronda', 'error');
-        }
-      });
-    } else {
-      // --- MODO CREACIÓN (POST) ---
-      this.teacherService.crearRonda(this.ronda).subscribe({
-        next: (nuevaRonda: any) => {
-          Swal.fire('¡Creado!', `Ronda "${nuevaRonda.titulo}" creada exitosamente`, 'success');
-          this.router.navigate(['/teacher/dashboard']);
-        },
-        error: (err) => {
-          this.enviando = false;
-          console.error(err);
-          Swal.fire('Error', 'No se pudo guardar la ronda', 'error');
-        }
-      });
-    }
+    const request$ = this.esEdicion && this.idRonda
+      ? this.teacherService.actualizarRonda(this.idRonda, this.ronda)
+      : this.teacherService.crearRonda(this.ronda);
+
+    request$.subscribe({
+      next: () => {
+        Swal.fire('Éxito', 'Ronda guardada correctamente', 'success');
+        this.router.navigate(['/teacher/dashboard']);
+      },
+      error: () => {
+        this.enviando = false;
+        Swal.fire('Error', 'No se pudo guardar', 'error');
+      }
+    });
   }
 }

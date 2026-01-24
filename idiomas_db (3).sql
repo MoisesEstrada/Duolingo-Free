@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 21-01-2026 a las 20:50:00
+-- Tiempo de generación: 23-01-2026 a las 23:35:30
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -44,12 +44,11 @@ CREATE TABLE `ejercicios` (
 --
 
 INSERT INTO `ejercicios` (`id`, `audio_url`, `enunciado`, `imagen_url`, `respuesta_correcta`, `tipo`, `ronda_id`, `contenido`, `opciones`) VALUES
-(40, NULL, 'traducir la siguiente oracion \"what the fuck is dad in animal\"', NULL, 'que put0 animal es ese', 'TRADUCCION', 11, '', ''),
-(41, NULL, 'traducir este audio', NULL, 'whats is causa gaaaa is donw chupetin ', 'LISTENING', 11, '02e35a59-7172-445a-8963-424bff8457c4-Y2meta.app - Que pasa causa !! Gaaa ! Vas a caer chupetin (128 kbps) (1).mp3', ''),
-(42, NULL, 'que animal es?', NULL, 'Tiger', 'IMAGEN', 11, '0203900d-e6be-40de-be4f-4febaed0cb6e-Fauna_2832020163305.jpg', 'Tiger,Lion,Bear,Panter'),
-(43, NULL, 'Traducir el siguiente parrafo \"Roses are red\n\nViolets are blue\n\nIt don’t always be like that\n\nBut sometimes it do.\"', NULL, 'Las rosas son rojas  Las violetas azules  No siempre es así  Pero a veces sí.', 'TRADUCCION', 12, '', ''),
-(47, NULL, 'traducir el audio ', NULL, 'whats is causa gaaaaaaaaaaaa is a donw chupetin gaaaaaaa', 'LISTENING', 15, '1f87e35a-d4ba-4eaa-8bc4-adf553cec660-Y2meta.app - Que pasa causa !! Gaaa ! Vas a caer chupetin (128 kbps) (1).mp3', ''),
-(48, NULL, 'traducir', NULL, 'My god, i posivol succes', 'LISTENING', 16, '5ce747c6-5a44-4203-a4fc-eb69198f83c2-DIOS MIO 😇 COMO ES POSIBLE ESTE SUCESO _ ARIANN #SHORTS #SHORTSYOUTUBE (128 kbps).mp3', '');
+(54, NULL, 'Traducir la frase \"The roses is red, The jazmis is violet, you is for me six and  my for you nine', NULL, 'god', 'TRADUCCION', 27, '', ''),
+(55, NULL, 'Que animal es el de la imagen', NULL, 'Cat', 'IMAGEN', 28, 'f4cf0d16-9984-425a-b9cb-d590b2234737-gato.jpg', 'Cat,Dog,Fish'),
+(56, NULL, 'Traducir el audio', NULL, 'Whats is causa ga', 'LISTENING', 29, 'f39f9e7d-4241-4544-b91c-4acc8d4d5622-Y2meta.app - Que pasa causa !! Gaaa ! Vas a caer chupetin (128 kbps) (1).mp3', ''),
+(57, NULL, 'Hellos is similar a Hi', NULL, 'V', 'VERDADERO_FALSO', 26, '', 'V,F'),
+(58, NULL, 'Good Morning', NULL, 'Buenos Dias', 'TRADUCCION', 26, '', '');
 
 -- --------------------------------------------------------
 
@@ -81,28 +80,10 @@ CREATE TABLE `progresos` (
 --
 
 INSERT INTO `progresos` (`id`, `fecha_realizacion`, `puntaje`, `estudiante_id`, `ronda_id`) VALUES
-(1, '2026-01-19 23:10:27.000000', 33, 3, 11),
-(2, '2026-01-19 23:12:45.000000', 0, 3, 15),
-(3, '2026-01-19 23:13:14.000000', 0, 3, 15),
-(4, '2026-01-19 23:13:27.000000', 33, 3, 11),
-(5, '2026-01-19 23:24:49.000000', 0, 3, 16),
-(6, '2026-01-19 23:25:06.000000', 0, 3, 15),
-(7, '2026-01-19 23:25:31.000000', 0, 3, 12),
-(8, '2026-01-21 03:17:02.000000', 0, 3, 12),
-(9, '2026-01-21 03:17:17.000000', 0, 3, 15),
-(10, '2026-01-21 03:17:23.000000', 0, 3, 16),
-(11, '2026-01-21 03:18:39.000000', 33, 3, 11),
-(12, '2026-01-21 03:21:27.000000', 0, 3, 16),
-(13, '2026-01-21 17:37:44.000000', 0, 3, 12),
-(14, '2026-01-21 17:37:55.000000', 0, 3, 15),
-(15, '2026-01-21 17:44:03.000000', 33, 3, 11),
-(16, '2026-01-21 17:49:39.000000', 0, 3, 12),
-(17, '2026-01-21 17:49:45.000000', 0, 3, 15),
-(18, '2026-01-21 17:49:49.000000', 0, 3, 16),
-(19, '2026-01-21 18:22:05.000000', 0, 3, 12),
-(20, '2026-01-21 18:22:10.000000', 0, 3, 15),
-(21, '2026-01-21 18:22:14.000000', 0, 3, 16),
-(22, '2026-01-21 18:42:00.000000', 33, 3, 11);
+(25, '2026-01-23 22:31:46.000000', 100, 3, 26),
+(26, '2026-01-23 21:49:59.000000', 100, 3, 28),
+(27, '2026-01-23 21:50:05.000000', 100, 3, 27),
+(28, '2026-01-23 21:50:21.000000', 100, 3, 29);
 
 -- --------------------------------------------------------
 
@@ -116,18 +97,20 @@ CREATE TABLE `rondas` (
   `nivel` varchar(255) DEFAULT NULL,
   `titulo` varchar(255) NOT NULL,
   `creador_id` bigint(20) DEFAULT NULL,
-  `activo` bit(1) NOT NULL
+  `activo` bit(1) NOT NULL,
+  `grado` varchar(255) DEFAULT NULL,
+  `seccion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `rondas`
 --
 
-INSERT INTO `rondas` (`id`, `descripcion`, `nivel`, `titulo`, `creador_id`, `activo`) VALUES
-(11, '', 'A1', 'Indentify is animals', 2, b'1'),
-(12, '', 'A2', 'Traduccion de textos simples', 2, b'1'),
-(15, '', 'A1', 'Audio', 2, b'1'),
-(16, '', 'A2', 'voacabulari', 2, b'1');
+INSERT INTO `rondas` (`id`, `descripcion`, `nivel`, `titulo`, `creador_id`, `activo`, `grado`, `seccion`) VALUES
+(26, '', 'A1', 'Saludos', 2, b'1', '1ro', 'A'),
+(27, '', 'B1', 'Traduccion', 2, b'0', '1ro', 'A'),
+(28, '', 'A1', 'Animales', 2, b'0', '1ro', 'A'),
+(29, '', 'B2', 'Pronunciacion', 2, b'0', '1ro', 'A');
 
 -- --------------------------------------------------------
 
@@ -141,17 +124,24 @@ CREATE TABLE `usuarios` (
   `enabled` bit(1) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('ADMIN','DOCENTE','ESTUDIANTE') NOT NULL,
-  `username` varchar(255) NOT NULL
+  `username` varchar(255) NOT NULL,
+  `grado` varchar(255) DEFAULT NULL,
+  `seccion` varchar(255) DEFAULT NULL,
+  `aulas` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `usuarios`
 --
 
-INSERT INTO `usuarios` (`id`, `email`, `enabled`, `password`, `role`, `username`) VALUES
-(1, 'admin@duolingo.com', b'1', '$2a$10$VkPqSK21KPJSm/0N5nIa1em4FNuE7qOcrFbodX68LY2NxKAV14jBK', 'ADMIN', 'admin'),
-(2, 'juandocente@duolingo.com', b'1', '$2a$10$4liVuNDb7eRA4d0VzAwKvOAsquk7nSm3x.Wdtutr5kS6drazPgk/O', 'DOCENTE', 'Juan'),
-(3, 'joseestudiante@duolingo.com', b'1', '$2a$10$5o5tQONB3TBa1j0bNsIDpeesA4wHdvoeX/zPxEZpKJ6lac3BRP5X6', 'ESTUDIANTE', 'Jose');
+INSERT INTO `usuarios` (`id`, `email`, `enabled`, `password`, `role`, `username`, `grado`, `seccion`, `aulas`) VALUES
+(1, 'admin@duolingo.com', b'1', '$2a$10$VkPqSK21KPJSm/0N5nIa1em4FNuE7qOcrFbodX68LY2NxKAV14jBK', 'ADMIN', 'admin', NULL, NULL, NULL),
+(2, 'juandocente@duolingo.com', b'1', '$2a$10$dL.5JEdSi8WOP4FsMT5OuetR3dGne19MQcVfK8ChZyirnndFPTYdm', 'DOCENTE', 'Juan', '', '', '1ro-A,1ro-B,1ro-C,4to-A,4to-B,4to-C'),
+(3, 'joseestudiante@duolingo.com', b'1', '$2a$10$5o5tQONB3TBa1j0bNsIDpeesA4wHdvoeX/zPxEZpKJ6lac3BRP5X6', 'ESTUDIANTE', 'Jose', '1ro', 'A', NULL),
+(4, 'mariaestu@duolingo.com', b'1', '$2a$10$u3icTXjrcnlegdxMBvGbjuSTLDIZevNkpUpx5.k0K63GU38o1n7Ou', 'ESTUDIANTE', 'Maria', '2do', 'B', NULL),
+(5, 'adsasdas@gmail.com', b'1', '$2a$10$y28YRfnaLhZBP5ia.sQWq.rXih9nh.3lj8dzHA/ZeJ/Te1SUgGeZi', 'ESTUDIANTE', 'Cris', '1ro', 'B', NULL),
+(6, '222170@unamba.edu.pe', b'1', '$2a$10$z8CmETLNn7TSC1NYEvmSeORq0LjaQrVNfNq7WHuQ/4HtaHulTHsj6', 'DOCENTE', 'Carlos', '2do', 'A', '2do-A,2do-B,2do-C'),
+(7, '221151@unamba.edu.pe', b'1', '$2a$10$qkOI9uidJTzP8gTBZp.pFOsaN8kAD/3Tm6T5EZ/RETWRxvjEOQpcu', 'ESTUDIANTE', 'Juanito', '3ro', 'A', NULL);
 
 --
 -- Índices para tablas volcadas
@@ -200,25 +190,25 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `ejercicios`
 --
 ALTER TABLE `ejercicios`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT de la tabla `progresos`
 --
 ALTER TABLE `progresos`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT de la tabla `rondas`
 --
 ALTER TABLE `rondas`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restricciones para tablas volcadas

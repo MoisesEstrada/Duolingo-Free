@@ -58,9 +58,11 @@ public class RoundService {
     @Transactional
     public Round guardarRonda(Round ronda, User docente) {
         ronda.setCreador(docente);
+
         if (ronda.getEjercicios() != null) {
-            ronda.getEjercicios().forEach(ejercicio -> ejercicio.setRonda(ronda));
+            ronda.getEjercicios().forEach(e -> e.setRonda(ronda));
         }
+
         return roundRepository.save(ronda);
     }
 

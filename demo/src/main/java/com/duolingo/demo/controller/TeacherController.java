@@ -1,3 +1,5 @@
+package com.duolingo.demo.controller;
+
 import com.duolingo.demo.dto.ExerciseDto;
 import com.duolingo.demo.model.Exercise;
 import com.duolingo.demo.service.ExerciseService;

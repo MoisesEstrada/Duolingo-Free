@@ -1,49 +1,73 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow px-4 py-3 mb-5">
   <div class="container-fluid">
-    <span class="navbar-brand fw-bold text-white"><i class="bi bi-controller me-2"></i> ZONA DE APRENDIZAJE</span>
+    <span class="navbar-brand fw-bold text-white">
+      <i class="bi bi-controller me-2"></i> ZONA DE APRENDIZAJE
+    </span>
     <div class="d-flex align-items-center gap-3">
       <span class="text-white small">Hola, {{ username }}</span>
-      <button class="btn btn-light btn-sm rounded-pill fw-bold text-primary px-3" (click)="logout()">Salir</button>
+      <button class="btn btn-light btn-sm rounded-pill fw-bold text-primary px-3"
+              (click)="logout()">Salir</button>
     </div>
   </div>
 </nav>
 
 <div class="container pb-5">
+
   <h2 class="fw-bold text-secondary mb-4">Tus Desafíos</h2>
 
   <div *ngIf="cargando" class="text-center py-5">
     <div class="spinner-border text-primary"></div>
   </div>
 
-  <div class="row g-4" *ngIf="!cargando">
-    <div class="col-md-4" *ngFor="let r of rondas">
-
-      <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden position-relative">
-
-        <div *ngIf="getPuntajeRonda(r.id) !== null"
-             class="position-absolute top-0 end-0 m-3 badge rounded-pill fs-6 shadow"
-             [ngClass]="getPuntajeRonda(r.id)! >= 70 ? 'bg-success' : 'bg-warning text-dark'">
-          Nota: {{ getPuntajeRonda(r.id) }} / 100
-        </div>
-
-        <div class="card-body p-4 text-center">
-          <div class="mb-3">
-            <span class="badge rounded-pill px-3 py-2"
-                  [ngClass]="{'bg-info': r.nivel==='A1', 'bg-warning text-dark': r.nivel==='A2', 'bg-danger': r.nivel==='B1'}">
-              Nivel {{ r.nivel }}
-            </span>
-          </div>
-
-          <h4 class="fw-bold mb-2">{{ r.titulo }}</h4>
-          <p class="text-muted small mb-4">{{ r.descripcion || 'Demuestra lo que sabes' }}</p>
-
-          <button [routerLink]="['/student/practice', r.id]"
-                  class="btn btn-primary w-100 rounded-pill py-2 fw-bold">
-            {{ getPuntajeRonda(r.id) !== null ? 'Repetir Lección' : 'Comenzar' }}
-          </button>
-        </div>
+  <!-- ===================== BÁSICO ===================== -->
+  <div *ngIf="!cargando && rondasBasico.length">
+    <h4 class="fw-bold text-primary mb-3">📘 Inglés Básico</h4>
+    <div class="row g-4 mb-5">
+      <div class="col-md-4" *ngFor="let r of rondasBasico">
+        <ng-container *ngTemplateOutlet="cardRonda; context:{ $implicit: r }"></ng-container>
       </div>
+    </div>
+  </div>
 
+  <!-- ===================== INTERMEDIO ===================== -->
+  <div *ngIf="!cargando && rondasIntermedio.length">
+    <h4 class="fw-bold text-success mb-3">📗 Inglés Intermedio</h4>
+    <div class="row g-4">
+      <div class="col-md-4" *ngFor="let r of rondasIntermedio">
+        <ng-container *ngTemplateOutlet="cardRonda; context:{ $implicit: r }"></ng-container>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- ===================== TEMPLATE REUTILIZABLE ===================== -->
+<ng-template #cardRonda let-r>
+  <div class="card h-100 shadow-sm border-0 rounded-4 position-relative">
+
+    <div *ngIf="getPuntajeRonda(r.id) !== null"
+         class="position-absolute top-0 end-0 m-3 badge rounded-pill fs-6 shadow"
+         [ngClass]="getPuntajeRonda(r.id)! >= 70 ? 'bg-success' : 'bg-warning text-dark'">
+      Nota: {{ getPuntajeRonda(r.id) }} / 100
+    </div>
+
+    <div class="card-body p-4 text-center">
+      <span class="badge rounded-pill px-3 py-2 mb-3"
+            [ngClass]="{
+              'bg-info': r.nivel==='A1',
+              'bg-warning text-dark': r.nivel==='A2',
+              'bg-success': r.nivel==='B1',
+              'bg-dark': r.nivel==='B2'
+            }">
+        Nivel {{ r.nivel }}
+      </span>
+
+      <h4 class="fw-bold mt-3">{{ r.titulo }}</h4>
+      <p class="text-muted small mb-4">{{ r.descripcion || 'Demuestra lo que sabes' }}</p>
+
+      <button [routerLink]="['/student/practice', r.id]"
+              class="btn btn-primary w-100 rounded-pill py-2 fw-bold">
+        {{ getPuntajeRonda(r.id) !== null ? 'Repetir Lección' : 'Comenzar' }}
+      </button>
+    </div>
+  </div>
+</ng-template>

@@ -13,7 +13,10 @@ import { AuthService } from '../../../services/auth';
 })
 export class DashboardComponent implements OnInit {
 
-  rondas: Ronda[] = [];
+  // 🔥 NUEVO: rondas separadas por nivel
+  rondasBasico: Ronda[] = [];
+  rondasIntermedio: Ronda[] = [];
+
   historial: Progress[] = [];
   username = 'Estudiante';
   userId: number = 0;
@@ -40,19 +43,21 @@ export class DashboardComponent implements OnInit {
 
     this.studentService.getRondas().subscribe({
       next: (data: any) => {
-        console.log('Rondas raw:', data);
         const todas = Array.isArray(data) ? data : [];
 
-        // --- ARREGLO DEL FILTRO ---
-        // Usamos '==' en lugar de '===' para que acepte: true, 1, "true"
-        // Esto soluciona que algunas rondas activas no se vieran.
-        this.rondas = todas.filter((r: Ronda) => r.activo == true);
+        const activas = todas.filter((r: Ronda) => r.activo == true);
 
-        // Cargar historial después de cargar rondas
+        // 🧠 ORDEN PERSONALIZADO
+        const ordenNivel: any = { A1: 1, A2: 2, B1: 3, B2: 4 };
+        activas.sort((a, b) => ordenNivel[a.nivel] - ordenNivel[b.nivel]);
+
+        // 🔥 CLASIFICACIÓN
+        this.rondasBasico = activas.filter(r => r.nivel === 'A1' || r.nivel === 'A2');
+        this.rondasIntermedio = activas.filter(r => r.nivel === 'B1' || r.nivel === 'B2');
+
         this.cargarHistorial();
       },
-      error: (err) => {
-        console.error('Error cargando rondas:', err);
+      error: () => {
         this.cargando = false;
         this.cd.detectChanges();
       }
@@ -62,12 +67,9 @@ export class DashboardComponent implements OnInit {
   cargarHistorial() {
     this.studentService.getHistorial(this.userId).subscribe({
       next: (hist: any) => {
-        console.log('Historial:', hist);
         this.historial = Array.isArray(hist) ? hist : [];
-
-        // Fin de carga total
         this.cargando = false;
-        this.cd.detectChanges(); // Forzamos actualización para quitar spinner
+        this.cd.detectChanges();
       },
       error: () => {
         this.cargando = false;
@@ -77,8 +79,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getPuntajeRonda(rondaId: number): number | null {
-    if (!this.historial) return null;
-    const progreso = this.historial.find((h: any) => h.ronda && h.ronda.id === rondaId);
+    const progreso = this.historial.find(h => h.ronda?.id === rondaId);
     return progreso ? progreso.puntaje : null;
   }
 

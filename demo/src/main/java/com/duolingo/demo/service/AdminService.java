@@ -24,16 +24,15 @@ public class AdminService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // --- 1. LISTAR USUARIOS (Filtrar por Rol) ---
+    // --- LISTAR ---
     public List<UserDto> obtenerUsuariosPorRol(Role role) {
-        // Buscamos todos y filtramos en memoria (o podrías crear un método en Repository)
         return userRepository.findAll().stream()
                 .filter(u -> u.getRole() == role)
                 .map(this::convertirADto)
                 .collect(Collectors.toList());
     }
 
-    // --- 2. CREAR USUARIO MANUALMENTE ---
+    // --- CREAR USUARIO ---
     public User crearUsuarioManual(UserDto dto) {
         if (userRepository.existsByUsername(dto.getUsername())) {
             throw new RuntimeException("Error: El usuario ya existe");
@@ -42,16 +41,22 @@ public class AdminService {
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setEmail(dto.getEmail());
-        // Contraseña por defecto si no viene: "123456" (Deberían cambiarla luego)
         String pass = (dto.getPassword() != null && !dto.getPassword().isEmpty()) ? dto.getPassword() : "123456";
         user.setPassword(passwordEncoder.encode(pass));
-        user.setRole(Role.valueOf(dto.getRole())); // "DOCENTE" o "ESTUDIANTE"
-        user.setEnabled(true);
+        user.setRole(Role.valueOf(dto.getRole()));
 
+        // --- LÓGICA DIFERENCIADA ---
+        // Estudiante usa: grado y seccion
+        // Docente usa: aulas (Ej: "1ro-A,2do-B")
+        user.setGrado(dto.getGrado());
+        user.setSeccion(dto.getSeccion());
+        user.setAulas(dto.getAulas()); // <--- GUARDAMOS LA LISTA DE AULAS DEL PROFE
+
+        user.setEnabled(true);
         return userRepository.save(user);
     }
 
-    // --- 3. EDITAR USUARIO ---
+    // --- EDITAR USUARIO ---
     public User actualizarUsuario(Long id, UserDto dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -59,12 +64,15 @@ public class AdminService {
         user.setEmail(dto.getEmail());
         user.setUsername(dto.getUsername());
 
-        // --- LA LÍNEA MÁGICA QUE FALTABA ---
         if (dto.getRole() != null) {
             user.setRole(Role.valueOf(dto.getRole().toUpperCase()));
         }
 
-        // Solo actualizamos password si envían una nueva
+        // --- ACTUALIZAR DATOS EDUCATIVOS ---
+        if (dto.getGrado() != null) user.setGrado(dto.getGrado());
+        if (dto.getSeccion() != null) user.setSeccion(dto.getSeccion());
+        if (dto.getAulas() != null) user.setAulas(dto.getAulas()); // <--- ACTUALIZAMOS AULAS
+
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
@@ -72,7 +80,6 @@ public class AdminService {
         return userRepository.save(user);
     }
 
-    // --- 4. ELIMINAR USUARIO ---
     public void eliminarUsuario(Long id) {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("Usuario no encontrado");
@@ -80,13 +87,12 @@ public class AdminService {
         userRepository.deleteById(id);
     }
 
-    // --- MÉTODO EXISTENTE (PDF) ---
+    // --- PDF ---
     public void registrarAlumnosDesdePdf(MultipartFile file) throws IOException {
         try (PDDocument document = PDDocument.load(file.getInputStream())) {
             PDFTextStripper stripper = new PDFTextStripper();
             String texto = stripper.getText(document);
             String[] lineas = texto.split("\\r?\\n");
-
             for (String linea : lineas) {
                 String[] datos = linea.trim().split("\\s+");
                 if (datos.length >= 3) {
@@ -96,6 +102,7 @@ public class AdminService {
                         u.setEmail(datos[1]);
                         u.setPassword(passwordEncoder.encode(datos[2]));
                         u.setRole(Role.ESTUDIANTE);
+                        // PDF básico no suele tener grado/sección, se editará manual o se mejora el parser
                         userRepository.save(u);
                     }
                 }
@@ -103,13 +110,16 @@ public class AdminService {
         }
     }
 
-    // Helper para convertir Entity a DTO
+    // --- CONVERTIR A DTO ---
     private UserDto convertirADto(User u) {
         return UserDto.builder()
                 .id(u.getId())
                 .username(u.getUsername())
                 .email(u.getEmail())
                 .role(u.getRole().name())
+                .grado(u.getGrado())
+                .seccion(u.getSeccion())
+                .aulas(u.getAulas()) // <--- ENVIAMOS AL FRONT
                 .build();
     }
 }

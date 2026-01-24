@@ -15,4 +15,12 @@ public class UserDto {
     private String email;
     private String password;
     private String role;
+
+    // --- ESTOS SON LOS CAMPOS QUE TE FALTABAN ---
+    // ...
+    private String grado;
+    private String seccion;
+
+    // --- NUEVO ---
+    private String aulas;
 }

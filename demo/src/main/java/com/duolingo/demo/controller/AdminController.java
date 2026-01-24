@@ -1,20 +1,23 @@
 package com.duolingo.demo.controller;
 
 import com.duolingo.demo.dto.UserDto;
-import com.duolingo.demo.model.Progress; // <--- Importar Modelo
+import com.duolingo.demo.model.Progress;
 import com.duolingo.demo.model.Role;
 import com.duolingo.demo.model.User;
-import com.duolingo.demo.repository.ProgressRepository; // <--- Importar Repo
+import com.duolingo.demo.repository.ProgressRepository;
+import com.duolingo.demo.repository.UserRepository; // <--- AGREGADO
 import com.duolingo.demo.service.AdminService;
 import com.duolingo.demo.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication; // <--- AGREGADO
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors; // <--- AGREGADO
 
 @RestController
 @RequestMapping("/api/admin")
@@ -27,15 +30,51 @@ public class AdminController {
     private FileStorageService fileStorageService;
 
     @Autowired
-    private ProgressRepository progressRepository; // <--- INYECCIÓN NUEVA
+    private ProgressRepository progressRepository;
 
-    // --- REPORTES (NUEVO PARA EL DOCENTE) ---
+    @Autowired
+    private UserRepository userRepository; // <--- NECESARIO PARA EL FILTRO
 
+    // --- REPORTES INTELIGENTES (FILTRADO POR AULAS) ---
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DOCENTE')")
     @GetMapping("/progreso-global")
-    public ResponseEntity<List<Progress>> obtenerTodoElProgreso() {
-        // Devuelve el historial de todos los estudiantes
-        return ResponseEntity.ok(progressRepository.findAll());
+    public ResponseEntity<List<Progress>> obtenerTodoElProgreso(Authentication auth) {
+
+        // 1. Obtenemos al usuario que hace la petición
+        String username = auth.getName();
+        User usuarioActual = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 2. Traemos TODO el historial (Lazy approach, filtrado en memoria)
+        List<Progress> todos = progressRepository.findAll();
+
+        // 3. Aplicamos lógica según Rol
+        if (usuarioActual.getRole() == Role.ADMIN) {
+            // ADMIN VE TODO
+            return ResponseEntity.ok(todos);
+        } else {
+            // DOCENTE VE SOLO SUS AULAS
+            // El campo aulas es un string tipo: "1ro-A,2do-B,5to-C"
+            String aulasAsignadas = usuarioActual.getAulas();
+
+            if (aulasAsignadas == null || aulasAsignadas.isEmpty()) {
+                return ResponseEntity.ok(List.of()); // No tiene aulas asignadas
+            }
+
+            // Filtramos la lista
+            List<Progress> filtrados = todos.stream()
+                    .filter(p -> {
+                        User estudiante = p.getEstudiante();
+                        // Creamos la clave del estudiante: "1ro-A"
+                        String claveEstudiante = estudiante.getGrado() + "-" + estudiante.getSeccion();
+
+                        // Verificamos si esa clave está dentro de las aulas del profe
+                        return aulasAsignadas.contains(claveEstudiante);
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(filtrados);
+        }
     }
 
     // --- GESTIÓN DE USUARIOS (SOLO ADMIN) ---
@@ -95,8 +134,7 @@ public class AdminController {
         }
     }
 
-    // --- GESTIÓN MULTIMEDIA (ADMIN Y DOCENTE) ---
-
+    // --- GESTIÓN MULTIMEDIA ---
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DOCENTE')")
     @PostMapping("/upload-multimedia")
     public ResponseEntity<?> uploadMultimedia(@RequestParam("file") MultipartFile file) {
@@ -109,7 +147,6 @@ public class AdminController {
         }
     }
 
-    // --- SERVIR ARCHIVOS (GET) ---
     @GetMapping("/files/{filename:.+}")
     public ResponseEntity<org.springframework.core.io.Resource> getFile(@PathVariable String filename) {
         try {

@@ -11,14 +11,14 @@
 
   <ul class="nav nav-pills mb-3">
     <li class="nav-item">
-      <button class="nav-link fw-bold px-4 py-2" [class.active]="activeTab === 'DOCENTE'"
+      <button class="nav-link fw-bold px-4" [class.active]="activeTab === 'DOCENTE'"
               [class.bg-warning]="activeTab === 'DOCENTE'" [class.text-dark]="activeTab === 'DOCENTE'"
               (click)="switchTab('DOCENTE')">
         <i class="bi bi-briefcase-fill me-2"></i> DOCENTES
       </button>
     </li>
     <li class="nav-item ms-2">
-      <button class="nav-link fw-bold px-4 py-2" [class.active]="activeTab === 'ESTUDIANTE'"
+      <button class="nav-link fw-bold px-4" [class.active]="activeTab === 'ESTUDIANTE'"
               [class.bg-success]="activeTab === 'ESTUDIANTE'" [class.text-white]="activeTab === 'ESTUDIANTE'"
               (click)="switchTab('ESTUDIANTE')">
         <i class="bi bi-backpack-fill me-2"></i> ESTUDIANTES
@@ -38,14 +38,33 @@
         <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th>ID</th><th>Usuario</th><th>Email</th><th class="text-end">Acciones</th>
+              <th>Usuario</th>
+              <th>Email</th>
+              <th>{{ activeTab === 'ESTUDIANTE' ? 'Grado/Sec' : 'Aulas Asignadas' }}</th>
+              <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let u of userList">
-              <td>{{ u.id }}</td>
               <td class="fw-bold">{{ u.username }}</td>
               <td>{{ u.email }}</td>
+
+              <td>
+                <span *ngIf="u.role === 'ESTUDIANTE'" class="badge bg-primary">
+                  {{ u.grado }} - {{ u.seccion }}
+                </span>
+
+                <div *ngIf="u.role === 'DOCENTE'">
+                   <ng-container *ngIf="u.aulas && u.aulas.length > 0; else sinAulas">
+                      <span *ngFor="let aula of u.aulas.split(',')" class="badge bg-warning text-dark me-1 border border-warning">
+                        {{ aula }}
+                      </span>
+                   </ng-container>
+                   <ng-template #sinAulas>
+                      <span class="text-muted small fst-italic">Sin asignación</span>
+                   </ng-template>
+                </div>
+              </td>
               <td class="text-end">
                 <button class="btn btn-sm btn-outline-warning me-2" (click)="openModal(u)">
                   <i class="bi bi-pencil-fill"></i>
@@ -62,7 +81,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="userModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content" style="border-radius: 20px;">
       <div class="modal-header border-0">
@@ -72,33 +91,85 @@
       <div class="modal-body">
         <form>
           <div class="mb-3">
-            <label class="form-label fw-bold">Usuario</label>
+            <label class="fw-bold">Usuario</label>
             <input type="text" class="form-control" [(ngModel)]="selectedUser.username" name="username">
           </div>
           <div class="mb-3">
-            <label class="form-label fw-bold">Email</label>
+            <label class="fw-bold">Email</label>
             <input type="email" class="form-control" [(ngModel)]="selectedUser.email" name="email">
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">Rol</label>
-            <select class="form-select" [(ngModel)]="selectedUser.role" name="role">
-              <option value="ESTUDIANTE">ESTUDIANTE</option>
-              <option value="DOCENTE">DOCENTE</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
+              <label class="fw-bold">Rol</label>
+              <select class="form-select" [(ngModel)]="selectedUser.role" name="role" (change)="aulasDocente = []">
+                <option value="ESTUDIANTE">ESTUDIANTE</option>
+                <option value="DOCENTE">DOCENTE</option>
+                <option value="ADMIN">ADMIN</option>
+              </select>
+          </div>
+
+          <div class="row bg-light p-3 rounded mb-3 border" *ngIf="selectedUser.role === 'ESTUDIANTE'">
+             <p class="mb-2 fw-bold text-primary small">ASIGNACIÓN DE AULA</p>
+             <div class="col-6">
+                 <label class="small fw-bold">Grado</label>
+                 <select class="form-select" [(ngModel)]="selectedUser.grado" name="grado">
+                      <option value="1ro">1ro</option>
+                      <option value="2do">2do</option>
+                      <option value="3ro">3ro</option>
+                      <option value="4to">4to</option>
+                      <option value="5to">5to</option>
+                 </select>
+             </div>
+             <div class="col-6">
+                 <label class="small fw-bold">Sección</label>
+                 <select class="form-select" [(ngModel)]="selectedUser.seccion" name="seccion">
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                 </select>
+             </div>
+          </div>
+
+          <div class="bg-light p-3 rounded mb-3 border" *ngIf="selectedUser.role === 'DOCENTE'">
+              <p class="mb-2 fw-bold text-warning text-dark small">AULAS A CARGO</p>
+              <div class="input-group mb-2">
+                  <select class="form-select form-select-sm" [(ngModel)]="tempGrado" name="tgrado">
+                       <option value="" disabled selected>Grado</option>
+                       <option value="1ro">1ro</option>
+                       <option value="2do">2do</option>
+                       <option value="3ro">3ro</option>
+                       <option value="4to">4to</option>
+                       <option value="5to">5to</option>
+                  </select>
+                  <select class="form-select form-select-sm" [(ngModel)]="tempSeccion" name="tsecc">
+                       <option value="" disabled selected>Sec</option>
+                       <option value="A">A</option>
+                       <option value="B">B</option>
+                       <option value="C">C</option>
+                  </select>
+                  <button class="btn btn-success btn-sm" type="button" (click)="agregarAula()">
+                      <i class="bi bi-plus-lg"></i>
+                  </button>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                  <span *ngFor="let aula of aulasDocente" class="badge bg-white text-dark border shadow-sm py-2 px-3">
+                      {{ aula }}
+                      <i class="bi bi-x-circle-fill ms-2 text-danger" style="cursor:pointer" (click)="borrarAula(aula)"></i>
+                  </span>
+                  <span *ngIf="aulasDocente.length === 0" class="text-muted small fst-italic">Sin aulas asignadas.</span>
+              </div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">Contraseña</label>
+            <label class="fw-bold">Contraseña</label>
             <input type="password" class="form-control" [(ngModel)]="selectedUser.password" name="password"
-                   [placeholder]="isEditing ? 'Dejar en blanco para no cambiar' : 'Requerido'">
+                   [placeholder]="isEditing ? 'Dejar vacío para no cambiar' : 'Requerido'">
           </div>
         </form>
       </div>
       <div class="modal-footer border-0">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" (click)="saveUser()">Guardar Cambios</button>
+        <button type="button" class="btn btn-primary" (click)="saveUser()">Guardar</button>
       </div>
     </div>
   </div>

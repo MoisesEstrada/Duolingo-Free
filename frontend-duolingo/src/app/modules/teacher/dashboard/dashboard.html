@@ -6,10 +6,26 @@
     </span>
 
     <div class="d-flex align-items-center gap-3">
-      <span class="text-white small">
-        Hola, <strong>{{ username }}</strong>
-      </span>
-      <button class="btn btn-outline-light btn-sm px-3" (click)="logout()">
+
+      <div class="d-flex flex-column align-items-end me-2">
+          <span class="text-white small">
+            Hola, <strong>{{ username }}</strong>
+          </span>
+          <div class="d-flex gap-1 mt-1" *ngIf="aulasDocente.length > 0">
+              <span *ngFor="let aula of aulasDocente"
+                    class="badge bg-warning text-dark border border-warning shadow-sm"
+                    style="font-size: 0.7rem; padding: 2px 6px;">
+                  {{ aula }}
+              </span>
+          </div>
+          <div *ngIf="aulasDocente.length === 0" class="badge bg-secondary text-white-50" style="font-size: 0.65rem;">
+              Sin asignación
+          </div>
+      </div>
+
+      <div class="vr text-white mx-2"></div>
+
+      <button class="btn btn-outline-light btn-sm px-3 rounded-pill" (click)="logout()">
         <i class="bi bi-box-arrow-right"></i> Salir
       </button>
     </div>
@@ -23,14 +39,22 @@
       {{ vistaActual === 'dashboard' ? 'Panel de Control Docente' : 'Reporte de Calificaciones' }}
     </h2>
 
-    <button *ngIf="vistaActual === 'reportes'" (click)="cargarDatos()" class="btn btn-outline-secondary rounded-pill animate-fade-in">
-      <i class="bi bi-arrow-left"></i> Volver al Panel
-    </button>
+    <div *ngIf="vistaActual === 'reportes'" class="d-flex gap-2 animate-fade-in">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" class="form-control border-start-0 ps-0"
+                   placeholder="Buscar estudiante..." [(ngModel)]="filtroBusqueda">
+        </div>
+
+        <button (click)="cargarDatos()" class="btn btn-outline-secondary rounded-pill text-nowrap px-4">
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+    </div>
   </div>
 
   <div *ngIf="cargando" class="text-center py-5">
     <div class="spinner-border text-success" role="status"></div>
-    <p class="text-muted mt-3 fw-bold">Procesando información...</p>
+    <p class="text-muted mt-3 fw-bold">Sincronizando datos...</p>
   </div>
 
   <div *ngIf="!cargando && error" class="alert alert-danger text-center shadow-sm">
@@ -42,17 +66,16 @@
   <div *ngIf="!cargando && !error && vistaActual === 'dashboard'" class="animate-fade-in">
 
     <div class="row justify-content-center g-4 mb-5">
-      
       <div class="col-md-5">
-        <div class="card shadow border-0 h-100 dashboard-card">
-          <div class="card-body text-center p-5">
-            <div class="icon-circle bg-success text-white mb-4 mx-auto">
-              <i class="bi bi-plus-circle-fill"></i>
+        <div class="card shadow border-0 h-100 dashboard-card bg-gradient-primary">
+          <div class="card-body text-center p-4">
+            <div class="icon-circle bg-success text-white mb-3 mx-auto shadow-sm">
+              <i class="bi bi-plus-lg"></i>
             </div>
-            <h4 class="fw-bold">Crear Ronda</h4>
-            <p class="text-muted">Diseña niveles con ejercicios interactivos.</p>
-            <button routerLink="/teacher/create-round" class="btn btn-success w-100 rounded-pill fw-bold mt-3">
-              Nueva Ronda
+            <h5 class="fw-bold">Crear Nueva Ronda</h5>
+            <p class="text-muted small">Diseña ejercicios para un salón específico.</p>
+            <button routerLink="/teacher/create-round" class="btn btn-success w-75 rounded-pill fw-bold btn-sm">
+              Comenzar
             </button>
           </div>
         </div>
@@ -60,57 +83,70 @@
 
       <div class="col-md-5">
         <div class="card shadow border-0 h-100 dashboard-card">
-          <div class="card-body text-center p-5">
-            <div class="icon-circle bg-info text-white mb-4 mx-auto">
-              <i class="bi bi-graph-up-arrow"></i>
+          <div class="card-body text-center p-4">
+            <div class="icon-circle bg-info text-white mb-3 mx-auto shadow-sm">
+              <i class="bi bi-bar-chart-fill"></i>
             </div>
-            <h4 class="fw-bold">Progresos</h4>
-            <p class="text-muted">Analiza el rendimiento de tus estudiantes.</p>
-            
-            <button (click)="verReportes()" class="btn btn-info text-white w-100 rounded-pill fw-bold mt-3">
-              Ver Reportes
+            <h5 class="fw-bold">Ver Notas</h5>
+            <p class="text-muted small">Revisa el progreso de tus estudiantes.</p>
+            <button (click)="verReportes()" class="btn btn-info text-white w-75 rounded-pill fw-bold btn-sm">
+              Consultar
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <hr class="my-5">
+    <hr class="my-5 opacity-25">
 
     <h3 class="fw-bold text-secondary mb-4 d-flex align-items-center gap-2">
-      <i class="bi bi-collection-play-fill"></i> Mis Rondas
+      <i class="bi bi-collection-play-fill text-success"></i> Mis Rondas Activas
     </h3>
 
     <div *ngIf="rondas.length === 0" class="text-center py-5">
-      <div class="card bg-light border-0 empty-state p-5 rounded-4">
+      <div class="card bg-light border-0 empty-state p-5 rounded-4 mx-auto" style="max-width: 600px;">
         <i class="bi bi-emoji-frown fs-1 text-muted mb-3 opacity-50"></i>
         <h5 class="fw-bold text-muted mb-1">Aún no has creado ninguna ronda</h5>
-        <p class="small text-muted mb-4">Comienza creando una desde el panel superior.</p>
+        <p class="small text-muted mb-4">Crea material educativo para tus secciones asignadas.</p>
       </div>
     </div>
 
     <div class="row" *ngIf="rondas.length > 0">
       <div class="col-md-4 mb-4" *ngFor="let r of rondas">
-        <div class="card ronda-card shadow-sm border-0 h-100" [class.ronda-inactiva]="!r.activo">
-          <div class="card-body p-4">
-            
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div class="form-check form-switch d-flex align-items-center gap-2 ps-0">
-                <input class="form-check-input ms-0 cursor-pointer" type="checkbox" 
-                       [checked]="r.activo" (change)="toggleStatus(r)" style="width: 2.5em; height: 1.25em;">
-                <span class="badge rounded-pill ms-2" [ngClass]="r.activo ? 'bg-success' : 'bg-secondary'">
-                  {{ r.nivel || 'N/A' }}
-                </span>
+        <div class="card ronda-card shadow-sm border-0 h-100 position-relative overflow-hidden"
+             [class.ronda-inactiva]="!r.activo">
+
+          <div class="position-absolute top-0 start-0 h-100"
+               [ngClass]="r.activo ? 'bg-success' : 'bg-secondary'" style="width: 4px;"></div>
+
+          <div class="card-body p-4 ps-4">
+
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex flex-column gap-1">
+                  <div class="form-check form-switch d-flex align-items-center gap-2 ps-0">
+                    <input class="form-check-input ms-0 cursor-pointer shadow-none" type="checkbox"
+                           [checked]="r.activo" (change)="toggleStatus(r)" style="width: 2.5em; height: 1.25em;">
+                  </div>
+                  <div class="d-flex gap-1 mt-1">
+                      <span class="badge rounded-pill border" [ngClass]="r.activo ? 'bg-success-subtle text-success border-success' : 'bg-secondary-subtle text-secondary'">
+                        {{ r.nivel || 'N/A' }}
+                      </span>
+                      <span class="badge rounded-pill bg-primary text-white border border-primary" title="Asignado a">
+                          {{ r.grado }} - {{ r.seccion }}
+                      </span>
+                  </div>
               </div>
-              <button class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" (click)="deleteRound(r.id)">
+
+              <button class="btn btn-sm btn-light text-danger rounded-circle shadow-sm"
+                      (click)="deleteRound(r.id)" title="Eliminar ronda">
                 <i class="bi bi-trash3-fill"></i>
               </button>
             </div>
 
-            <h5 class="fw-bold text-dark text-truncate" title="{{ r.titulo }}">{{ r.titulo }}</h5>
-            <p class="text-muted small text-truncate mb-4">{{ r.descripcion || 'Sin descripción' }}</p>
+            <h5 class="fw-bold text-dark text-truncate mb-1" title="{{ r.titulo }}">{{ r.titulo }}</h5>
+            <p class="text-muted small text-truncate mb-3">{{ r.descripcion || 'Sin descripción' }}</p>
 
-            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-light">
               <span class="small fw-bold text-muted">
                 <i class="bi bi-list-task text-primary"></i> {{ r.cantidadEjercicios || 0 }} ejercicios
               </span>
@@ -126,52 +162,58 @@
   </div>
 
   <div *ngIf="!cargando && !error && vistaActual === 'reportes'" class="animate-fade-in">
-    
+
     <div class="card shadow border-0 rounded-4">
-      <div class="card-body p-4">
-        
-        <div *ngIf="reportes.length === 0" class="text-center py-5">
+      <div class="card-body p-0"> <div *ngIf="reportes.length === 0" class="text-center py-5">
            <i class="bi bi-clipboard-data fs-1 text-muted opacity-50"></i>
            <p class="mt-3 text-muted fw-bold">No hay registros de notas todavía.</p>
-           <p class="small text-muted">Cuando tus alumnos completen una ronda, aparecerán aquí.</p>
         </div>
 
         <div class="table-responsive" *ngIf="reportes.length > 0">
-          <table class="table table-hover align-middle">
+          <table class="table table-hover align-middle mb-0">
             <thead class="bg-light text-uppercase small text-muted">
               <tr>
                 <th class="py-3 ps-4 border-0">Estudiante</th>
-                <th class="py-3 border-0">Ronda / Nivel</th>
-                <th class="py-3 text-center border-0">Calificación</th>
+                <th class="py-3 border-0">Aula</th> <th class="py-3 border-0">Ronda</th>
+                <th class="py-3 text-center border-0">Nota</th>
                 <th class="py-3 text-end pe-4 border-0">Fecha</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let rep of reportes">
+              <tr *ngFor="let rep of reportesFiltrados">
                 <td class="ps-4">
                   <div class="d-flex align-items-center gap-3">
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" 
-                         style="width: 40px; height: 40px; font-size: 1.2rem;">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                         style="width: 40px; height: 40px;">
                       {{ rep.estudiante.username.charAt(0).toUpperCase() }}
                     </div>
                     <div>
                       <div class="fw-bold text-dark">{{ rep.estudiante.username }}</div>
-                      <div class="small text-muted" style="font-size: 0.8rem;">ID: {{ rep.estudiante.id }}</div>
                     </div>
                   </div>
                 </td>
+
                 <td>
-                  <div class="fw-bold text-secondary">{{ rep.ronda.titulo }}</div>
-                  <span class="badge bg-light text-dark border mt-1">{{ rep.ronda.nivel }}</span>
+                    <span class="badge bg-light text-dark border">
+                        {{ rep.estudiante['grado'] || '?' }} - {{ rep.estudiante['seccion'] || '?' }}
+                    </span>
                 </td>
+
+                <td>
+                  <div class="fw-bold text-secondary text-truncate" style="max-width: 200px;">{{ rep.ronda.titulo }}</div>
+                  <span class="badge bg-light text-muted border mt-1" style="font-size: 0.7rem;">{{ rep.ronda.nivel }}</span>
+                </td>
+
                 <td class="text-center">
-                  <span class="badge rounded-pill fs-6 px-3 shadow-sm" 
-                        [ngClass]="rep.puntaje >= 70 ? 'bg-success' : 'bg-danger'">
-                    {{ rep.puntaje }} / 100
+                  <span class="badge rounded-pill fs-6 px-3 shadow-sm"
+                        [ngClass]="rep.puntaje >= 14 ? 'bg-success' : (rep.puntaje >= 11 ? 'bg-warning text-dark' : 'bg-danger')">
+                    {{ rep.puntaje }}
                   </span>
                 </td>
+
                 <td class="text-end pe-4 text-muted small">
-                  {{ rep.fechaRealizacion | date:'short' }}
+                  {{ rep.fechaRealizacion | date:'shortDate' }} <br>
+                  {{ rep.fechaRealizacion | date:'shortTime' }}
                 </td>
               </tr>
             </tbody>
@@ -181,5 +223,4 @@
       </div>
     </div>
   </div>
-
 </div>

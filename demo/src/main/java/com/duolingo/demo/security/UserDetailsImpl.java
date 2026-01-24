@@ -26,10 +26,14 @@ public class UserDetailsImpl implements UserDetails {
 
     private Collection<? extends GrantedAuthority> authorities;
 
+    // --- NUEVOS CAMPOS (Necesarios para enviarlos al Frontend) ---
+    private String grado;
+    private String seccion;
+    private String aulas;
+
     // Método estático para construir nuestro UserDetails desde el User de la BD
     public static UserDetailsImpl build(User user) {
-        // Convertimos el ROL (Enum) a una Authority limpia (SIN "ROLE_")
-        // Esto es crucial para que coincida con .hasAuthority("ADMIN") en SecurityConfig
+        // Convertimos el ROL (Enum) a una Authority limpia
         List<GrantedAuthority> authorities = Collections.singletonList(
                 new SimpleGrantedAuthority(user.getRole().name()));
 
@@ -38,7 +42,11 @@ public class UserDetailsImpl implements UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
-                authorities);
+                authorities,
+                // --- PASAMOS LOS DATOS DE LA BD A LA SESIÓN ---
+                user.getGrado(),
+                user.getSeccion(),
+                user.getAulas());
     }
 
     @Override

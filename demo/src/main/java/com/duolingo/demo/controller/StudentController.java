@@ -3,12 +3,16 @@ package com.duolingo.demo.controller;
 import com.duolingo.demo.model.Exercise;
 import com.duolingo.demo.model.Progress;
 import com.duolingo.demo.model.Round;
+import com.duolingo.demo.model.User; // <--- Importar
+import com.duolingo.demo.repository.RoundRepository; // <--- Importar
+import com.duolingo.demo.repository.UserRepository; // <--- Importar
 import com.duolingo.demo.service.ExerciseService;
 import com.duolingo.demo.service.ProgressService;
 import com.duolingo.demo.service.RoundService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication; // <--- Importar
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,30 +31,43 @@ public class StudentController {
     @Autowired
     private ProgressService progressService;
 
-    // 1. Ver todas las lecciones disponibles (El mapa)
+    @Autowired
+    private UserRepository userRepository; // <--- NECESARIO
+
+    @Autowired
+    private RoundRepository roundRepository; // <--- NECESARIO
+
+    // 1. Ver MIS rondas (Filtradas por mi salón)
     @GetMapping("/rondas")
-    public ResponseEntity<List<Round>> getAllRounds() {
-        return ResponseEntity.ok(roundService.listarTodas());
+    public ResponseEntity<List<Round>> getMyRounds(Authentication auth) {
+
+        // 1. Buscamos al estudiante conectado
+        User estudiante = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
+
+        // 2. Pedimos al repositorio SOLO las rondas de su Grado y Sección
+        List<Round> misRondas = roundRepository.findByGradoAndSeccion(
+                estudiante.getGrado(),
+                estudiante.getSeccion()
+        );
+
+        return ResponseEntity.ok(misRondas);
     }
 
-    // 2. Entrar a una ronda (Bajar los ejercicios para jugar)
+    // ... (El resto de métodos getExercisesForRound, saveProgress, etc. quedan IGUAL)
     @GetMapping("/rondas/{rondaId}/ejercicios")
     public ResponseEntity<List<Exercise>> getExercisesForRound(@PathVariable Long rondaId) {
         return ResponseEntity.ok(exerciseService.obtenerEjerciciosDeRonda(rondaId));
     }
 
-    // 3. Guardar mi nota final
-    // URL: /api/student/progreso?estudianteId=1&rondaId=5&puntaje=100
     @PostMapping("/progreso")
     public ResponseEntity<Progress> saveProgress(
             @RequestParam Long estudianteId,
             @RequestParam Long rondaId,
             @RequestParam Integer puntaje) {
-
         return ResponseEntity.ok(progressService.guardarProgreso(estudianteId, rondaId, puntaje));
     }
 
-    // 4. Ver mi historial (Para ver mis medallas)
     @GetMapping("/mi-historial/{estudianteId}")
     public ResponseEntity<List<Progress>> getMyHistory(@PathVariable Long estudianteId) {
         return ResponseEntity.ok(progressService.historialEstudiante(estudianteId));
